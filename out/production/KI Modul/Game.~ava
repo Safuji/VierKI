@@ -1,0 +1,55 @@
+import java.util.Random;
+
+public class Game {
+  
+  // Anfang Attribute
+  static Spielfeld spielfeld = new Spielfeld();
+  static Random zufall = new Random(); 
+  static boolean freiesFeldGefunden;
+  // Ende Attribute
+  
+  // Anfang Methoden
+  public static void main(String[] args) {
+    spielfeld.spielfeldLeeren();
+    String input = "";
+    int spieler = 2;
+    do{                 
+      spielfeld.zeigeSpielfeld();
+      freiesFeldGefunden = false;
+      if (spieler == 1) {
+        spieler = 2;
+      }else{
+        spieler = 1;
+        }
+      while (freiesFeldGefunden == false) {        
+        if (spieler == 1) {
+          input = InputClass.readInput("Zahl zwischen 1 und 7"); 
+        }else{
+          //K�nstliche Intelligenz:
+          input = "" + zufall.nextInt(7); 
+          }
+               
+        if (input.equals("1") || input.equals("2")|| input.equals("3")|| input.equals("4")|| input.equals("5")|| input.equals("6")|| input.equals("7")) {
+          int x = Integer.valueOf(input) -1;
+          if (spielfeld.getHoehe(x)<6) {
+            spielfeld.aendereZustand(x,spieler);
+            freiesFeldGefunden = true;
+          }else{
+            System.out.println("Diese Reihe ist bereits voll");
+          }
+        } // end of if
+        if (input.equals("r")) {
+          spielfeld.spielfeldLeeren(); 
+          freiesFeldGefunden = true;       
+        } // end of if  
+        if (input.equals("e")) {
+          System.exit(0);
+          }
+      } // end of while
+      spielfeld.gewinnabfrage(spieler);
+      //gegnerIstAmZug();
+    }while(!input.equals(""));
+  }
+  // Ende Methoden
+} // end of Game
+

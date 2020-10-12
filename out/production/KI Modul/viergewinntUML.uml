@@ -1,0 +1,55 @@
+﻿[Files]
+File0=C:\Users\Alvaro\Documents\Java\viergewinnt\Feld.java
+File1=C:\Users\Alvaro\Documents\Java\viergewinnt\Game.java
+File2=C:\Users\Alvaro\Documents\Java\viergewinnt\Spielfeld.java
+
+[Box:  - Feld]
+X=777
+Y=83
+MinVis=0
+ShowParameter=4
+SortOrder=0
+ShowIcons=1
+FontSize=10
+FontName=Segoe UI
+
+[Box:  - Game]
+X=43
+Y=69
+MinVis=0
+ShowParameter=4
+SortOrder=0
+ShowIcons=1
+FontSize=10
+FontName=Segoe UI
+
+[Box:  - Spielfeld]
+X=401
+Y=27
+MinVis=0
+ShowParameter=4
+SortOrder=0
+ShowIcons=1
+FontSize=10
+FontName=Segoe UI
+
+[Diagram]
+comments=0
+OffsetX=0
+OffsetY=0
+Visibility=0
+ShowParameter=4
+SortOrder=0
+ShowIcons=1
+ShowConnections=0
+Fontname=Segoe UI
+Fontsize=10
+ShowObjectDiagram=0
+
+[Connections]
+V0=Game#Spielfeld#AssociationDirected####0#0#0###0#0
+V1=Spielfeld#Feld#Aggregation####0#0#0###0#0
+
+[Interactive]
+I0=
+
