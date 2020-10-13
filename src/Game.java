@@ -23,9 +23,10 @@ public class Game {
     static JFrame frame = new JFrame(title);
     static final int frameRate = 60;
     static char[][] grid = new char[6][7];
-    static char player = 'R';
-    static char AI = 'B';
+    static char player = 'B';
+    static char AI = 'R';
     static boolean hasGameEnded = false;
+    static int layerCount = 4;
 
     public static void main(String[] args) {
 
@@ -67,9 +68,13 @@ public class Game {
                     int colw = frameWidth / (grid.length + 1);
                     makePlay(e.getX() / colw, grid);
                     System.out.println(getHeuristik(grid));
-
-
-                    makePlay(getBestPlay(), grid);
+                    if (isWinner(otherPlayer(player),grid))
+                        hasGameEnded = true;
+                    System.out.println("////////////////////////////////////////////////");
+                    if(!hasGameEnded)
+                        makePlay(getBestPlay(), grid);
+                    if (isWinner(otherPlayer(player),grid))
+                        hasGameEnded = true;
                 }
 
 
@@ -83,15 +88,27 @@ public class Game {
             }
         }, 0, 1000/frameRate);
         //playGame();
+        if (player == AI){
+            makePlay(getBestPlay(), grid);
+        }
 
         
+    }
+    public static char otherPlayer(char p){
+        if (p == 'R') {
+            return 'B';
+        } else {
+            return 'R';
+        }
     }
     public static int getBestPlay(){
         int bestPlay = 0;
         int bestScore = -100000000;
         for (int i = 0; i < grid[0].length; i++) {
             if (grid[0][i] == ' ') {
-                int playScore = getPlayScore(i);
+                makePlay(i,grid);
+                int playScore = getBestScore(layerCount, true);
+                revertPlay(i);
                 if (playScore > bestScore) {
                     bestScore = playScore;
                     bestPlay = i;
@@ -102,21 +119,47 @@ public class Game {
         System.out.println(bestPlay + "  " + bestScore);
         return bestPlay;
     }
-    public static int getBestScore(int layer ){
-        int bestPlay = 0;
+    public static int getBestScore(int layer, boolean min){
         int bestScore = -100000000;
-        for (int i = 0; i < grid[0].length; i++) {
-            if (grid[0][i] == ' ') {
-                int playScore = getPlayScore(i);
-                if (playScore > bestScore) {
-                    bestScore = playScore;
-                    bestPlay = i;
+        if(layer == 0) {
+            //display(grid);
+            return getHeuristik(grid);
+        }
+        else {
+            if (isWinner(player,grid) || isWinner(otherPlayer(player),grid))
+                return getHeuristik(grid);
+            if (!min) {
+                for (int i = 0; i < grid[0].length; i++) {
+
+                    if (grid[0][i] == ' ') {
+                        makePlay(i, grid);
+                        int score = getBestScore(layer - 1,true);
+                        revertPlay(i);
+                        if (score > bestScore)
+                            bestScore = score;
+                    }
+
+
+                    //System.out.println("KI :" + i + "  " + playScore);
                 }
-                System.out.println("KI :" + i + "  " + playScore);
+            }else {
+                bestScore = 100000000;
+                for (int i = 0; i < grid[0].length; i++) {
+
+                    if (grid[0][i] == ' ') {
+                        makePlay(i, grid);
+                        int score = getBestScore(layer - 1,false);
+                        revertPlay(i);
+                        if (score < bestScore)
+                            bestScore = score;
+                    }
+
+                }
             }
         }
-        System.out.println(bestPlay + "  " + bestScore);
-        return bestPlay;
+            //System.out.println(layer + "  " + bestScore);
+        return bestScore;
+
     }
     public static void timer(){
         bufferStrategy = canvas.getBufferStrategy();
@@ -187,8 +230,7 @@ public class Game {
                 }
 
             }
-            if (isWinner(player,grid))
-                hasGameEnded = true;
+
             switchPlayer();
 
         }
@@ -300,10 +342,13 @@ public class Game {
                 System.out.print("|");
             }
             System.out.println();
-            System.out.println("---------------");
+
         }
         System.out.println(" 0 1 2 3 4 5 6");
         System.out.println();
+        System.out.println("R: "+getPlayerScore('R',grid));
+        System.out.println("B: "+getPlayerScore('B',grid));
+        System.out.println("ges B: "+getHeuristik(grid));
     }
     
     public static boolean validate(int column, char[][] grid){
@@ -326,9 +371,12 @@ public class Game {
 
     public static int getHeuristik(char[][] grid){
 
-        System.out.println("R: "+getPlayerScore('R',grid));
-        System.out.println("B: "+getPlayerScore('B',grid));
-        return getPlayerScore('R',grid) - getPlayerScore('B',grid);
+        //System.out.println("R: "+getPlayerScore('R',grid));
+        //System.out.println("B: "+getPlayerScore('B',grid));
+
+        return getPlayerScore(AI,grid) - getPlayerScore(otherPlayer(AI),grid);
+
+
     }
     public static int getPlayerScore(char player, char[][] grid){
         int score = 0;
