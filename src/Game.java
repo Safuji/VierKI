@@ -23,10 +23,14 @@ public class Game {
     static JFrame frame = new JFrame(title);
     static final int frameRate = 60;
     static char[][] grid = new char[6][7];
-    static char player = 'B';
-    static char AI = 'R';
+    static char playerColor = 'R';
+
+    static char AI = otherPlayer(playerColor);
+    static char player = playerColor;
     static boolean hasGameEnded = false;
-    static int layerCount = 4;
+    static int layerCount = 7;
+    static int AiScore = 0;
+
 
     public static void main(String[] args) {
 
@@ -66,13 +70,18 @@ public class Game {
                     resetgame();
                 else {
                     int colw = frameWidth / (grid.length + 1);
-                    makePlay(e.getX() / colw, grid);
-                    System.out.println(getHeuristik(grid));
+                    makeRealPlay(e.getX() / colw);
+                    System.out.print(e.getX()/colw+ ",");
+                    //331250121155340
+                    //System.out.println(getHeuristik(grid));
                     if (isWinner(otherPlayer(player),grid))
                         hasGameEnded = true;
-                    System.out.println("////////////////////////////////////////////////");
-                    if(!hasGameEnded)
-                        makePlay(getBestPlay(), grid);
+                    //System.out.println("////////////////////////////////////////////////");
+                    if(!hasGameEnded) {
+                        int bestP = getBestPlay();
+                        makeRealPlay(bestP);
+                        System.out.print(bestP+ ",");
+                    }
                     if (isWinner(otherPlayer(player),grid))
                         hasGameEnded = true;
                 }
@@ -88,11 +97,23 @@ public class Game {
             }
         }, 0, 1000/frameRate);
         //playGame();
+        //playArray(new int[]{3,3,3,3,1,2,2,2,5,1,0,2,1,2,2,4,1,1,1,3,5,5,5,5,3,5,4,4});
+        //playArray(new int[]{3,3,3,3,3,2,2,2,0,2,2,4,3,4,4,1,4});
+
         if (player == AI){
-            makePlay(getBestPlay(), grid);
+            makeRealPlay(getBestPlay());
         }
 
-        
+
+    }
+    public static void makeRealPlay(int i){
+        makePlay(i,grid,player);
+        switchPlayer();
+    }
+    public static void playArray(int[] a){
+        for (int p: a) {
+            makeRealPlay(p);
+        }
     }
     public static char otherPlayer(char p){
         if (p == 'R') {
@@ -104,11 +125,22 @@ public class Game {
     public static int getBestPlay(){
         int bestPlay = 0;
         int bestScore = -100000000;
+
         for (int i = 0; i < grid[0].length; i++) {
             if (grid[0][i] == ' ') {
-                makePlay(i,grid);
+                makePlay(i, grid,player);
+
+
+                hasGameEnded = isWinner(player,grid);
+                System.out.println("//////////////////////////////////////////////// PLAY "+i);
+
+                if (hasGameEnded) {
+                    revertPlay(i);
+                    return i;
+                }
                 int playScore = getBestScore(layerCount, true);
                 revertPlay(i);
+
                 if (playScore > bestScore) {
                     bestScore = playScore;
                     bestPlay = i;
@@ -116,46 +148,45 @@ public class Game {
                 System.out.println("KI :" + i + "  " + playScore);
             }
         }
-        System.out.println(bestPlay + "  " + bestScore);
+        //System.out.println(bestPlay + "  " + bestScore);
+        AiScore = bestScore;
         return bestPlay;
     }
-    public static int getBestScore(int layer, boolean min){
-        int bestScore = -100000000;
+    public static int getBestScore(int layer, boolean min){ // isMin
+        int bestScore = min?1000000:-100000000;
         if(layer == 0) {
-            //display(grid);
             return getHeuristik(grid);
         }
         else {
-            if (isWinner(player,grid) || isWinner(otherPlayer(player),grid))
-                return getHeuristik(grid);
-            if (!min) {
-                for (int i = 0; i < grid[0].length; i++) {
 
-                    if (grid[0][i] == ' ') {
-                        makePlay(i, grid);
-                        int score = getBestScore(layer - 1,true);
+
+            for (int i = 0; i < grid[0].length; i++) {
+
+                if (grid[0][i] == ' ') {
+                    makePlay(i, grid,min?'R':'B');
+                    //display(grid);
+                    boolean willWin = isWinner(min?'R':'B',grid) ;
+                    if (willWin){
+                        int score = getHeuristik(grid);
                         revertPlay(i);
+                        return score;
+                    }
+                    int score = getBestScore(layer - 1,!min);
+                    revertPlay(i);
+
+                    if (!min) {
                         if (score > bestScore)
                             bestScore = score;
-                    }
-
-
-                    //System.out.println("KI :" + i + "  " + playScore);
-                }
-            }else {
-                bestScore = 100000000;
-                for (int i = 0; i < grid[0].length; i++) {
-
-                    if (grid[0][i] == ' ') {
-                        makePlay(i, grid);
-                        int score = getBestScore(layer - 1,false);
-                        revertPlay(i);
+                    } else
                         if (score < bestScore)
                             bestScore = score;
-                    }
-
                 }
+
+
+                //System.out.println("KI :" + i + "  " + playScore);
             }
+            //System.out.println(bestScore);
+
         }
             //System.out.println(layer + "  " + bestScore);
         return bestScore;
@@ -205,11 +236,13 @@ public class Game {
         graphics.setFont(new Font("Comic Sans MS", Font.ITALIC + Font.BOLD, 20));
         graphics.drawString(String.valueOf(redscore),10, 20);
         graphics.drawString(String.valueOf(bluescore),frameWidth - graphics.getFontMetrics().stringWidth(String.valueOf(bluescore)) -10, 20);
+        graphics.drawString(String.valueOf(AiScore),frameWidth/2 - (graphics.getFontMetrics().stringWidth(String.valueOf(bluescore)) -10)/2, 20);
 
         bufferStrategy.show();
         graphics.dispose();
     }
     public static void resetgame(){
+        System.out.println();
         grid = new char[6][7];
 
         for (int row = 0; row < grid.length; row++){
@@ -218,20 +251,20 @@ public class Game {
             }
         }
         hasGameEnded = false;
-        player = 'R';
+        player = playerColor;
     }
-    public static void makePlay(int play, char[][] gr){
+    public static void makePlay(int play, char[][] gr, char p){
         if(validate(play,gr)) {
 
             for (int row = grid.length - 1; row >= 0; row--) {
                 if (gr[row][play] == ' ') {
-                    gr[row][play] = player;
+                    gr[row][play] = p;
                     break;
                 }
 
             }
 
-            switchPlayer();
+            //switchPlayer();
 
         }
     }
@@ -244,7 +277,7 @@ public class Game {
             }
 
         }
-        switchPlayer();
+        //switchPlayer();
 
     }
     public static void switchPlayer(){
@@ -256,7 +289,7 @@ public class Game {
     }
     public static int getPlayScore(int play){
 
-        makePlay(play,grid);
+        makePlay(play,grid,player);
 
         display(grid);
         int score = getHeuristik(grid);
@@ -286,9 +319,9 @@ public class Game {
             int play;
             do {
                 display(grid);
-                System.out.println("schore: "+getHeuristik(grid));
+                //System.out.println("schore: "+getHeuristik(grid));
 
-                System.out.print("Player " + player + ", choose a column: ");
+                //System.out.print("Player " + player + ", choose a column: ");
 
                 play = in.nextInt();
 
@@ -350,7 +383,7 @@ public class Game {
         System.out.println("B: "+getPlayerScore('B',grid));
         System.out.println("ges B: "+getHeuristik(grid));
     }
-    
+
     public static boolean validate(int column, char[][] grid){
         //valid column?
         try {
@@ -370,13 +403,7 @@ public class Game {
     }
 
     public static int getHeuristik(char[][] grid){
-
-        //System.out.println("R: "+getPlayerScore('R',grid));
-        //System.out.println("B: "+getPlayerScore('B',grid));
-
         return getPlayerScore(AI,grid) - getPlayerScore(otherPlayer(AI),grid);
-
-
     }
     public static int getPlayerScore(char player, char[][] grid){
         int score = 0;
@@ -436,31 +463,30 @@ public class Game {
             }
         }
 
-        // vierer
-        if (isWinner(player,grid))
-            score += 100000;
+
 
         return score;
     }
-    public static boolean isWinner(char player, char[][] grid){
+    public static boolean isWinner(char p, char[][] grid){
+        //p = otherPlayer(p) ;
         //check for 4 across
         for(int row = 0; row<grid.length; row++){
             for (int col = 0;col < grid[0].length - 3;col++){
-                if (grid[row][col] == player   && 
-                    grid[row][col+1] == player &&
-                    grid[row][col+2] == player &&
-                    grid[row][col+3] == player){
+                if (grid[row][col] == p   &&
+                    grid[row][col+1] == p &&
+                    grid[row][col+2] == p &&
+                    grid[row][col+3] == p){
                     return true;
                 }
-            }           
+            }
         }
         //check for 4 up and down
         for(int row = 0; row < grid.length - 3; row++){
             for(int col = 0; col < grid[0].length; col++){
-                if (grid[row][col] == player   && 
-                    grid[row+1][col] == player &&
-                    grid[row+2][col] == player &&
-                    grid[row+3][col] == player){
+                if (grid[row][col] == p   &&
+                    grid[row+1][col] == p &&
+                    grid[row+2][col] == p &&
+                    grid[row+3][col] == p){
                     return true;
                 }
             }
@@ -468,10 +494,10 @@ public class Game {
         //check upward diagonal
         for(int row = 3; row < grid.length; row++){
             for(int col = 0; col < grid[0].length - 3; col++){
-                if (grid[row][col] == player   && 
-                    grid[row-1][col+1] == player &&
-                    grid[row-2][col+2] == player &&
-                    grid[row-3][col+3] == player){
+                if (grid[row][col] == p   &&
+                    grid[row-1][col+1] == p &&
+                    grid[row-2][col+2] == p &&
+                    grid[row-3][col+3] == p){
                     return true;
                 }
             }
@@ -479,10 +505,10 @@ public class Game {
         //check downward diagonal
         for(int row = 0; row < grid.length - 3; row++){
             for(int col = 0; col < grid[0].length - 3; col++){
-                if (grid[row][col] == player   && 
-                    grid[row+1][col+1] == player &&
-                    grid[row+2][col+2] == player &&
-                    grid[row+3][col+3] == player){
+                if (grid[row][col] == p   &&
+                    grid[row+1][col+1] == p &&
+                    grid[row+2][col+2] == p &&
+                    grid[row+3][col+3] == p){
                     return true;
                 }
             }
