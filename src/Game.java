@@ -28,7 +28,7 @@ public class Game {
     static char AI = otherPlayer(playerColor);
     static char player = playerColor;
     static boolean hasGameEnded = false;
-    static int layerCount = 7;
+    static int layerCount = 5;
     static int AiScore = 0;
 
 
@@ -70,20 +70,24 @@ public class Game {
                     resetgame();
                 else {
                     int colw = frameWidth / (grid.length + 1);
-                    makeRealPlay(e.getX() / colw);
-                    System.out.print(e.getX()/colw+ ",");
-                    //331250121155340
-                    //System.out.println(getHeuristik(grid));
-                    if (isWinner(otherPlayer(player),grid))
-                        hasGameEnded = true;
-                    //System.out.println("////////////////////////////////////////////////");
-                    if(!hasGameEnded) {
-                        int bestP = getBestPlay();
-                        makeRealPlay(bestP);
-                        System.out.print(bestP+ ",");
+                    int move = e.getX() / colw;
+                    if (grid[0][move] == ' ') {
+
+                        makeRealPlay(move);
+                        System.out.print(move + ",");
+                        //331250121155340
+                        //System.out.println(getHeuristik(grid));
+                        if (isWinner(otherPlayer(player), grid))
+                            hasGameEnded = true;
+                        //System.out.println("////////////////////////////////////////////////");
+                        if (!hasGameEnded) {
+                            int bestP = getBestPlay();
+                            makeRealPlay(bestP);
+                            System.out.print(bestP + ",");
+                        }
+                        if (isWinner(otherPlayer(player), grid))
+                            hasGameEnded = true;
                     }
-                    if (isWinner(otherPlayer(player),grid))
-                        hasGameEnded = true;
                 }
 
 
@@ -236,7 +240,10 @@ public class Game {
         graphics.setFont(new Font("Comic Sans MS", Font.ITALIC + Font.BOLD, 20));
         graphics.drawString(String.valueOf(redscore),10, 20);
         graphics.drawString(String.valueOf(bluescore),frameWidth - graphics.getFontMetrics().stringWidth(String.valueOf(bluescore)) -10, 20);
-        graphics.drawString(String.valueOf(AiScore),frameWidth/2 - (graphics.getFontMetrics().stringWidth(String.valueOf(bluescore)) -10)/2, 20);
+        graphics.drawString(String.valueOf(AiScore),frameWidth/2 - (graphics.getFontMetrics().stringWidth(String.valueOf(AiScore)) -10)/2, 20);
+        if (hasGameEnded){
+            graphics.drawString("Gama has ended",frameWidth/2, frameHeight/2);
+        }
 
         bufferStrategy.show();
         graphics.dispose();
